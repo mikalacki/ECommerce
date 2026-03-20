@@ -1,0 +1,14 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!--text size -->
+    <dimen name="text_size_18">18sp</dimen>
+    <dimen name="text_size_14">14sp</dimen>
+    <dimen name="text_size_16">16sp</dimen>
+
+    <!-- Dimensions -->
+    <dimen name="dimen_12">12dp</dimen>
+    <dimen name="dimen_16">16dp</dimen>
+    <dimen name="dimen_180">180dp</dimen>
+    <dimen name="dimen_8">8dp</dimen>
+    <dimen name="dimen_4">4dp</dimen>
+</resources>
