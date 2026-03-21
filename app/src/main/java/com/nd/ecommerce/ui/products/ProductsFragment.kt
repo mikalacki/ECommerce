@@ -4,23 +4,28 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
+import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
-import androidx.recyclerview.widget.LinearLayoutManager
+import androidx.lifecycle.lifecycleScope
+import androidx.navigation.findNavController
+import androidx.paging.LoadState
+import androidx.recyclerview.widget.GridLayoutManager
 import com.nd.ecommerce.databinding.FragmentProductsBinding
-import com.nd.ecommerce.ui.products.adapters.ProductsAdapter
+import com.nd.ecommerce.ui.products.adapters.ProductsLoadStateAdapter
+import com.nd.ecommerce.ui.products.adapters.ProductsPagingAdapter
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class ProductsFragment : Fragment() {
 
     private var _binding: FragmentProductsBinding? = null
     private val binding get() = _binding!!
     private val viewModel: ProductsViewModel by activityViewModels()
-    private val productsAdapter = ProductsAdapter()
+    private var productsAdapter: ProductsPagingAdapter? = null
 
     override fun onCreateView(
-        inflater: LayoutInflater,
-        container: ViewGroup?,
-        savedInstanceState: Bundle?
+        inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
     ): View {
         _binding = FragmentProductsBinding.inflate(inflater, container, false)
         return binding.root
@@ -28,33 +33,52 @@ class ProductsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
+        requireActivity().title = "ECommerce"
 
         setupRecyclerView()
-        observeViewModel()
-
-        viewModel.fetchProducts()
+        observePagingData()
+        observeLoadState()
     }
 
     private fun setupRecyclerView() {
         binding.rvProducts.apply {
-            layoutManager = LinearLayoutManager(requireContext())
+            layoutManager = GridLayoutManager(requireContext(), 2)
+            productsAdapter = ProductsPagingAdapter { productId ->
+                val action =
+                    ProductsFragmentDirections.actionProductsFragmentToProductDetailsFragment(
+                        productId
+                    )
+                findNavController().navigate(action)
+            }
             adapter = productsAdapter
+            val gridLayoutManager = GridLayoutManager(requireContext(), 2)
+
+            binding.rvProducts.layoutManager = gridLayoutManager
+
+            binding.rvProducts.adapter = productsAdapter?.withLoadStateFooter(
+                footer = ProductsLoadStateAdapter { productsAdapter?.retry() })
+
+            gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
+                override fun getSpanSize(position: Int): Int {
+                    return if (position == productsAdapter?.itemCount) 2 else 1
+                }
+            }
         }
     }
 
-    private fun observeViewModel() {
-        viewModel.products.observe(viewLifecycleOwner) { products ->
-            productsAdapter.submitList(products)
+    private fun observePagingData() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            viewModel.productsPagingData.collectLatest { pagingData ->
+                productsAdapter?.submitData(pagingData)
+            }
         }
+    }
 
-        viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
-            binding.progressBar.visibility = if (isLoading) View.VISIBLE else View.GONE
-        }
-
-        viewModel.error.observe(viewLifecycleOwner) { errorMessage ->
-            binding.tvError.visibility =
-                if (errorMessage.isNullOrEmpty()) View.GONE else View.VISIBLE
-            binding.tvError.text = errorMessage
+    private fun observeLoadState() {
+        viewLifecycleOwner.lifecycleScope.launch {
+            productsAdapter?.loadStateFlow?.collectLatest { loadStates ->
+                binding.progressBar.isVisible = loadStates.refresh is LoadState.Loading
+            }
         }
     }
 

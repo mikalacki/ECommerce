@@ -4,40 +4,35 @@ import androidx.lifecycle.LiveData
 import androidx.lifecycle.MutableLiveData
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
-import com.nd.ecommerce.data.Product
+import com.nd.ecommerce.data.ProductDetails
 import com.nd.ecommerce.retrofit.ProductsRepository
 import com.nd.ecommerce.retrofit.RetrofitClient
 import kotlinx.coroutines.launch
 
-class ProductsViewModel : ViewModel() {
+class ProductDetailsViewModel : ViewModel() {
 
     private val repository = ProductsRepository(RetrofitClient.productsApi)
 
-    private val _products = MutableLiveData<List<Product>>()
-    val products: LiveData<List<Product>> = _products
+    private val _productDetails = MutableLiveData<ProductDetails>()
+    val productDetails: LiveData<ProductDetails> = _productDetails
 
-    private val _isLoading = MutableLiveData<Boolean>()
+    private val _isLoading = MutableLiveData(false)
     val isLoading: LiveData<Boolean> = _isLoading
 
     private val _error = MutableLiveData<String?>()
     val error: LiveData<String?> = _error
 
-    val productsPagingData = repository
-        .getProductsPaged()
-        .cachedIn(viewModelScope)
-
-    fun fetchProducts() {
+    fun fetchProductDetails(productId: Int) {
         viewModelScope.launch {
             _isLoading.value = true
             _error.value = null
 
-            val result = repository.getProducts()
+            val result = repository.getProductDetails(productId)
 
             result.onSuccess {
-                _products.value = it
+                _productDetails.value = it
             }.onFailure {
-                _error.value = it.message ?: "Unknown error"
+                _error.value = it.message
             }
 
             _isLoading.value = false
