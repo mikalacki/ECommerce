@@ -21,7 +21,33 @@ android {
 
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
+    flavorDimensions += "client"
 
+    productFlavors {
+        create("defaultClient") {
+            dimension = "client"
+            applicationIdSuffix = ".default"
+            versionNameSuffix = "-default"
+            resValue("string", "app_name", "ECommerce")
+            buildConfigField("String", "BASE_URL", "\"https://dummyjson.com/\"")
+        }
+
+        create("partnerA") {
+            dimension = "client"
+            applicationIdSuffix = ".partnera"
+            versionNameSuffix = "-partnerA"
+            resValue("string", "app_name", "Partner A Shop")
+            buildConfigField("String", "BASE_URL", "\"https://dummyjson.com/\"")
+        }
+
+        create("partnerB") {
+            dimension = "client"
+            applicationIdSuffix = ".partnerb"
+            versionNameSuffix = "-partnerB"
+            resValue("string", "app_name", "Partner B Store")
+            buildConfigField("String", "BASE_URL", "\"https://dummyjson.com/\"")
+        }
+    }
     buildTypes {
         release {
             minifyEnabled false
@@ -38,6 +64,7 @@ android {
 
     buildFeatures {
         viewBinding = true
+        buildConfig = true
     }
 }
 
