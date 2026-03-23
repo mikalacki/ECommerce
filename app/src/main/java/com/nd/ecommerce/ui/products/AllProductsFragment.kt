@@ -5,6 +5,7 @@ import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
 import androidx.core.view.isVisible
+import androidx.core.widget.addTextChangedListener
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.activityViewModels
 import androidx.fragment.app.viewModels
@@ -64,9 +65,18 @@ class AllProductsFragment : Fragment() {
         observePagingData()
         observeLoadState()
         observeFavouriteIds()
+        setupSearch()
+        binding.btnRetry.setOnClickListener {
+            productsAdapter.retry()
+        }
 
     }
 
+    private fun setupSearch() {
+        binding.etSearch.addTextChangedListener { editable ->
+            viewModel.updateSearchQuery(editable?.toString().orEmpty())
+        }
+    }
     private fun observePagingData() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
@@ -78,7 +88,7 @@ class AllProductsFragment : Fragment() {
     }
 
     private fun setupRecyclerView() {
-        val gridLayoutManager = GridLayoutManager(requireContext(), 2)
+        val gridLayoutManager = GridLayoutManager(requireContext(), getSpanCount())
 
         binding.rvProducts.layoutManager = gridLayoutManager
         binding.rvProducts.adapter = productsAdapter.withLoadStateFooter(
@@ -97,7 +107,24 @@ class AllProductsFragment : Fragment() {
         viewLifecycleOwner.lifecycleScope.launch {
             viewLifecycleOwner.repeatOnLifecycle(Lifecycle.State.STARTED) {
                 productsAdapter.loadStateFlow.collectLatest { loadStates ->
-                    binding.progressBar.isVisible = loadStates.refresh is LoadState.Loading
+                    val isLoading = loadStates.refresh is LoadState.Loading
+                    val isError = loadStates.refresh is LoadState.Error
+                    val isNotLoading = loadStates.refresh is LoadState.NotLoading
+                    val isEmpty =
+                        loadStates.refresh is LoadState.NotLoading && productsAdapter.itemCount == 0
+
+                    binding.tvEmpty.isVisible = isEmpty
+                    binding.rvProducts.isVisible = !isError && !isEmpty
+                    binding.progressBar.isVisible = isLoading
+                    binding.rvProducts.isVisible = isNotLoading
+                    binding.tvError.isVisible = isError
+                    binding.btnRetry.isVisible = isError
+
+                    if (isError) {
+                        val errorState = loadStates.refresh as LoadState.Error
+                        binding.tvError.text = errorState.error.localizedMessage
+                            ?: "Failed to load products"
+                    }
                 }
             }
         }
@@ -106,6 +133,15 @@ class AllProductsFragment : Fragment() {
     private fun observeFavouriteIds() {
         viewModel.favouriteProductIds.observe(viewLifecycleOwner) { favouriteIds ->
             productsAdapter.updateFavouriteIds(favouriteIds)
+        }
+    }
+
+    private fun getSpanCount(): Int {
+        val swDp = resources.configuration.smallestScreenWidthDp
+        return when {
+            swDp >= 840 -> 4
+            swDp >= 600 -> 3
+            else -> 2
         }
     }
 

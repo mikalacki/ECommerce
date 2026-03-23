@@ -4,9 +4,9 @@ import androidx.paging.PagingSource
 import androidx.paging.PagingState
 import com.nd.ecommerce.data.Product
 import com.nd.ecommerce.data.toProduct
-
 class ProductsPagingSource(
-    private val apiService: ProductsApiService
+    private val apiService: ProductsApiService,
+    private val query: String?
 ) : PagingSource<Int, Product>() {
 
     override suspend fun load(params: LoadParams<Int>): LoadResult<Int, Product> {
@@ -15,9 +15,18 @@ class ProductsPagingSource(
             val pageSize = params.loadSize
             val skip = currentPage * pageSize
 
-            val response = apiService.getProductsPaged(
-                limit = pageSize, skip = skip
-            )
+            val response = if (query.isNullOrBlank()) {
+                apiService.getProducts(
+                    limit = pageSize,
+                    skip = skip
+                )
+            } else {
+                apiService.searchProducts(
+                    query = query,
+                    limit = pageSize,
+                    skip = skip
+                )
+            }
 
             val products = response.products.map { it.toProduct() }
 

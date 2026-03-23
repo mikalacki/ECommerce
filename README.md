@@ -10,6 +10,7 @@ users to mark products as favorites.
 ## Features
 
 - Product list (Paging 3)
+- Product search
 - Product details screen
 - Favorite products (stored in Room database)
 - White-label support (product flavors)
@@ -90,6 +91,7 @@ proizvoda kao omiljenih.
 ## Funkcionalnosti
 
 - Lista proizvoda (Paging 3)
+- Pretrega proizvoda
 - Detalji proizvoda
 - Omiljeni proizvodi (Room baza)
 - White-label podrška (product flavors)

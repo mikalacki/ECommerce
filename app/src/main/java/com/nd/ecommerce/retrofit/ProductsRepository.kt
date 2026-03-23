@@ -20,13 +20,17 @@ class ProductsRepository @Inject constructor(
     private val favouriteProductsDao: FavouriteProductsDao
 ) {
 
-    fun getProductsPaged(): Flow<PagingData<Product>> {
+    fun getProductsPaged(query: String?): Flow<PagingData<Product>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 20, initialLoadSize = 20, enablePlaceholders = false
-            ), pagingSourceFactory = {
-                ProductsPagingSource(apiService)
-            }).flow
+                pageSize = 20,
+                initialLoadSize = 20,
+                enablePlaceholders = false
+            ),
+            pagingSourceFactory = {
+                ProductsPagingSource(apiService, query)
+            }
+        ).flow
     }
 
     fun getFavouriteProducts(): Flow<List<Product>> {

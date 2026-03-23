@@ -1,0 +1,18 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <!-- Text size -->
+    <dimen name="text_size_14">16sp</dimen>
+    <dimen name="text_size_16">18sp</dimen>
+    <dimen name="text_size_18">20sp</dimen>
+    <dimen name="text_size_20">22sp</dimen>
+    <dimen name="text_size_24">28sp</dimen>
+
+    <!-- Dimensions -->
+    <dimen name="dimen_4">6dp</dimen>
+    <dimen name="dimen_8">12dp</dimen>
+    <dimen name="dimen_12">16dp</dimen>
+    <dimen name="dimen_16">24dp</dimen>
+    <dimen name="dimen_20">28dp</dimen>
+    <dimen name="dimen_24">32dp</dimen>
+    <dimen name="dimen_180">240dp</dimen>
+</resources>

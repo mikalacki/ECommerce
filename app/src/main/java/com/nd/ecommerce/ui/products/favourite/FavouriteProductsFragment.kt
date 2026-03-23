@@ -54,12 +54,22 @@ class FavouriteProductsFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
 
-        binding.rvFavouriteProducts.layoutManager = GridLayoutManager(requireContext(), 2)
+        binding.rvFavouriteProducts.layoutManager =
+            GridLayoutManager(requireContext(), getSpanCount())
         binding.rvFavouriteProducts.adapter = favouritesAdapter
 
         viewModel.favouriteProducts.observe(viewLifecycleOwner) { products ->
             favouritesAdapter.submitList(products)
             binding.tvEmpty.isVisible = products.isEmpty()
+        }
+    }
+
+    private fun getSpanCount(): Int {
+        val swDp = resources.configuration.smallestScreenWidthDp
+        return when {
+            swDp >= 840 -> 4
+            swDp >= 600 -> 3
+            else -> 2
         }
     }
 

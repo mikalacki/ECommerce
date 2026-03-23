@@ -45,6 +45,9 @@ class ProductDetailsFragment : Fragment() {
         binding.btnFavourite.setOnClickListener {
             viewModel.toggleFavourite()
         }
+        binding.btnRetry.setOnClickListener {
+            viewModel.fetchProductDetails(args.productId)
+        }
     }
 
     private fun observeData() {
@@ -66,9 +69,18 @@ class ProductDetailsFragment : Fragment() {
         viewModel.isLoading.observe(viewLifecycleOwner) { isLoading ->
             binding.progressBar.isVisible = isLoading
         }
-
         viewModel.error.observe(viewLifecycleOwner) { error ->
-            binding.tvError.isVisible = !error.isNullOrEmpty()
+            val hasError = !error.isNullOrEmpty()
+
+            binding.tvError.isVisible = hasError
+            binding.btnRetry.isVisible = hasError
+
+            binding.ivProduct.isVisible = !hasError
+            binding.tvTitle.isVisible = !hasError
+            binding.tvPrice.isVisible = !hasError
+            binding.tvDescription.isVisible = !hasError
+            binding.btnFavourite.isVisible = !hasError
+
             binding.tvError.text = error
         }
     }
