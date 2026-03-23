@@ -1,9 +1,8 @@
-package com.nd.ecommerce.ui.products
+package com.nd.ecommerce.ui.products.favourite
 
 import androidx.lifecycle.ViewModel
 import androidx.lifecycle.asLiveData
 import androidx.lifecycle.viewModelScope
-import androidx.paging.cachedIn
 import com.nd.ecommerce.data.Product
 import com.nd.ecommerce.retrofit.ProductsRepository
 import dagger.hilt.android.lifecycle.HiltViewModel
@@ -11,13 +10,13 @@ import kotlinx.coroutines.launch
 import javax.inject.Inject
 
 @HiltViewModel
-class ProductsViewModel @Inject constructor(
+class FavouriteProductsViewModel @Inject constructor(
     private val repository: ProductsRepository
 ) : ViewModel() {
 
-    val productsPagingData = repository.getProductsPaged().cachedIn(viewModelScope)
-
-    val favouriteProductIds = repository.getFavouriteProductIds().asLiveData()
+    val favouriteProducts = repository
+        .getFavouriteProducts()
+        .asLiveData()
 
     fun toggleFavourite(product: Product) {
         viewModelScope.launch {

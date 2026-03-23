@@ -4,25 +4,18 @@ import android.os.Bundle
 import android.view.LayoutInflater
 import android.view.View
 import android.view.ViewGroup
-import androidx.core.view.isVisible
 import androidx.fragment.app.Fragment
-import androidx.fragment.app.activityViewModels
-import androidx.lifecycle.lifecycleScope
-import androidx.navigation.findNavController
-import androidx.paging.LoadState
-import androidx.recyclerview.widget.GridLayoutManager
+import com.google.android.material.tabs.TabLayoutMediator
+import com.nd.ecommerce.R
 import com.nd.ecommerce.databinding.FragmentProductsBinding
-import com.nd.ecommerce.ui.products.adapters.ProductsLoadStateAdapter
-import com.nd.ecommerce.ui.products.adapters.ProductsPagingAdapter
-import kotlinx.coroutines.flow.collectLatest
-import kotlinx.coroutines.launch
+import com.nd.ecommerce.ui.products.adapters.ProductsTabsAdapter
+import dagger.hilt.android.AndroidEntryPoint
 
+@AndroidEntryPoint
 class ProductsFragment : Fragment() {
 
     private var _binding: FragmentProductsBinding? = null
     private val binding get() = _binding!!
-    private val viewModel: ProductsViewModel by activityViewModels()
-    private var productsAdapter: ProductsPagingAdapter? = null
 
     override fun onCreateView(
         inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?
@@ -33,53 +26,15 @@ class ProductsFragment : Fragment() {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        requireActivity().title = "ECommerce"
 
-        setupRecyclerView()
-        observePagingData()
-        observeLoadState()
-    }
+        binding.viewPager.adapter = ProductsTabsAdapter(this)
 
-    private fun setupRecyclerView() {
-        binding.rvProducts.apply {
-            layoutManager = GridLayoutManager(requireContext(), 2)
-            productsAdapter = ProductsPagingAdapter { productId ->
-                val action =
-                    ProductsFragmentDirections.actionProductsFragmentToProductDetailsFragment(
-                        productId
-                    )
-                findNavController().navigate(action)
+        TabLayoutMediator(binding.tabLayout, binding.viewPager) { tab, position ->
+            tab.text = when (position) {
+                0 -> getString(R.string.all_products)
+                else -> getString(R.string.favourite_products)
             }
-            adapter = productsAdapter
-            val gridLayoutManager = GridLayoutManager(requireContext(), 2)
-
-            binding.rvProducts.layoutManager = gridLayoutManager
-
-            binding.rvProducts.adapter = productsAdapter?.withLoadStateFooter(
-                footer = ProductsLoadStateAdapter { productsAdapter?.retry() })
-
-            gridLayoutManager.spanSizeLookup = object : GridLayoutManager.SpanSizeLookup() {
-                override fun getSpanSize(position: Int): Int {
-                    return if (position == productsAdapter?.itemCount) 2 else 1
-                }
-            }
-        }
-    }
-
-    private fun observePagingData() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            viewModel.productsPagingData.collectLatest { pagingData ->
-                productsAdapter?.submitData(pagingData)
-            }
-        }
-    }
-
-    private fun observeLoadState() {
-        viewLifecycleOwner.lifecycleScope.launch {
-            productsAdapter?.loadStateFlow?.collectLatest { loadStates ->
-                binding.progressBar.isVisible = loadStates.refresh is LoadState.Loading
-            }
-        }
+        }.attach()
     }
 
     override fun onDestroyView() {

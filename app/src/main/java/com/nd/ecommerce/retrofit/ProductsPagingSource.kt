@@ -16,19 +16,15 @@ class ProductsPagingSource(
             val skip = currentPage * pageSize
 
             val response = apiService.getProductsPaged(
-                limit = pageSize,
-                skip = skip
+                limit = pageSize, skip = skip
             )
 
             val products = response.products.map { it.toProduct() }
 
-            val nextKey = if (products.isEmpty()) null else currentPage + 1
-            val prevKey = if (currentPage == 0) null else currentPage - 1
-
             LoadResult.Page(
                 data = products,
-                prevKey = prevKey,
-                nextKey = nextKey
+                prevKey = if (currentPage == 0) null else currentPage - 1,
+                nextKey = if (products.isEmpty()) null else currentPage + 1
             )
         } catch (e: Exception) {
             LoadResult.Error(e)

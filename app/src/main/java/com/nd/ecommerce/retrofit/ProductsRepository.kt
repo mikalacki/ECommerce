@@ -5,38 +5,59 @@ import androidx.paging.PagingConfig
 import androidx.paging.PagingData
 import com.nd.ecommerce.data.Product
 import com.nd.ecommerce.data.ProductDetails
+import com.nd.ecommerce.data.toFavouriteEntity
 import com.nd.ecommerce.data.toProduct
 import com.nd.ecommerce.data.toProductDetails
+import com.nd.ecommerce.room.dao.FavouriteProductsDao
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.map
+import javax.inject.Inject
+import javax.inject.Singleton
 
-class ProductsRepository(
-    private val apiService: ProductsApiService
+@Singleton
+class ProductsRepository @Inject constructor(
+    private val apiService: ProductsApiService,
+    private val favouriteProductsDao: FavouriteProductsDao
 ) {
+
     fun getProductsPaged(): Flow<PagingData<Product>> {
         return Pager(
             config = PagingConfig(
-                pageSize = 5, initialLoadSize = 5, enablePlaceholders = false
+                pageSize = 20, initialLoadSize = 20, enablePlaceholders = false
             ), pagingSourceFactory = {
                 ProductsPagingSource(apiService)
             }).flow
     }
 
-    suspend fun getProducts(): Result<List<Product>> {
-        return try {
-            val response = apiService.getProducts()
+    fun getFavouriteProducts(): Flow<List<Product>> {
+        return favouriteProductsDao.getAllFavouriteProducts().map { list ->
+            list.map { it.toProduct() }
+        }
+    }
 
-            if (response.isSuccessful) {
-                val body = response.body()
-                if (body != null) {
-                    Result.success(body.products.map { it.toProduct() })
-                } else {
-                    Result.failure(Exception("Response body is null"))
-                }
-            } else {
-                Result.failure(Exception("HTTP error: ${response.code()}"))
-            }
-        } catch (e: Exception) {
-            Result.failure(e)
+    fun isFavouriteFlow(productId: Int): Flow<Boolean> {
+        return favouriteProductsDao.isFavouriteFlow(productId)
+    }
+
+    fun getFavouriteProductIds(): Flow<Set<Int>> {
+        return favouriteProductsDao.getFavouriteProductIds().map { it.toSet() }
+    }
+
+    suspend fun toggleFavourite(product: Product) {
+        val isFavourite = favouriteProductsDao.isFavourite(product.id)
+        if (isFavourite) {
+            favouriteProductsDao.deleteFavouriteProduct(product.id)
+        } else {
+            favouriteProductsDao.insertFavouriteProduct(product.toFavouriteEntity())
+        }
+    }
+
+    suspend fun toggleFavourite(productDetails: ProductDetails) {
+        val isFavourite = favouriteProductsDao.isFavourite(productDetails.id)
+        if (isFavourite) {
+            favouriteProductsDao.deleteFavouriteProduct(productDetails.id)
+        } else {
+            favouriteProductsDao.insertFavouriteProduct(productDetails.toFavouriteEntity())
         }
     }
 
